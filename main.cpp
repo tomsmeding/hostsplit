@@ -7,13 +7,16 @@
 #include <functional>
 #include <thread>
 #include <stdexcept>
+#include <system_error>
 #include <cstdlib>
+#include <cstring>
 #include <cctype>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
 #include <sys/select.h>
 #include <unistd.h>
+#include <signal.h>
 #include <errno.h>
 #include "util.h"
 

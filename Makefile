@@ -1,5 +1,5 @@
 CXX = g++
-CXXFLAGS = -Wall -Wextra -std=c++14 -O2
+CXXFLAGS = -Wall -Wextra -std=c++11 -O2
 LDFLAGS =
 BIN = main
 

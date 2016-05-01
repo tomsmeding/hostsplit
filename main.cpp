@@ -409,7 +409,7 @@ public:
 					targets.back().addheaderreg(value.substr(0,idx),value.substr(idx2));
 				} else throw Error("Unrecognised key on line "+to_string(lineidx));
 			} catch(regex_error e){
-				throw Error("Regex error on line "+to_string(lineidx)+": "+e.what());
+				throw Error("Regex error on line "+to_string(lineidx)+": "+e.what()+" (code "+to_string(e.code())+")");
 			}
 		}
 		if(listenport==-1){

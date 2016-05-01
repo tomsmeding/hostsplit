@@ -1,6 +1,11 @@
 CXX = g++
 CXXFLAGS = -Wall -Wextra -std=c++11 -O2
-LDFLAGS =
+ifeq ($(shell uname),Linux)
+       LDFLAGS = -pthread
+else
+       LDFLAGS =
+endif
+
 BIN = main
 
 obj_files = $(patsubst %.cpp,%.o,$(wildcard *.cpp))

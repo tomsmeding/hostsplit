@@ -1,3 +1,4 @@
+#include <cstring>
 #include <sys/socket.h>
 #include "request.h"
 #include "error.h"

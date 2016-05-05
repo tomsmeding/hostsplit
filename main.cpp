@@ -102,7 +102,7 @@ public:
 Config file format:
 
 #Hashtag in first column marks rest of line as comment
-#The bind key indicates what port to listen on
+#The listen key indicates what port to listen on
 listen 80
 #Every target specification should start with a target key, where the first
 # argument indicates the destination port, and the second argument is a name

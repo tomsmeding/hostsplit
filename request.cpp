@@ -3,6 +3,7 @@
 #include "request.h"
 #include "error.h"
 #include "util.h"
+#include "const.h"
 
 using namespace std;
 
@@ -72,6 +73,9 @@ pair<string,int> recvheaders(int conn){
 		if(state==4)break;
 		if(res.size()>=102400)throw Error("Too large header block");
 	}
+#ifdef DEBUG
+	cout<<res<<endl;
+#endif
 	return {res,cursor+1};
 }
 

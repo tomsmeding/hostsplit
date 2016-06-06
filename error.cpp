@@ -1,4 +1,5 @@
 #include "error.h"
+#include "const.h"
 
 
 Error::Error(const string &s):whatstr(s){}

@@ -13,6 +13,7 @@
 #include "socketwrapper.h"
 #include "request.h"
 #include "error.h"
+#include "const.h"
 
 #define MAX_LISTEN (128)
 
@@ -48,6 +49,9 @@ void socketpipe(Socketwrapper from,Socketwrapper to){
 		int nrec=recv(f,buf,bufsz,0);
 		if(nrec==-1)throw Error(string("recv error in socketpipe: ")+strerror(errno));
 		if(nrec==0)break; //EOF
+#ifdef DEBUG
+		cout<<string(buf,nrec)<<endl;
+#endif
 		(t==to?to:from).sendall(buf,nrec);
 	}
 }
@@ -94,6 +98,9 @@ public:
 			throw Error(string("connect: ")+strerror(errno));
 		}
 		tconn.sendall(buf);
+#ifdef DEBUG
+		cout<<buf<<endl;
+#endif
 		socketpipe(conn,tconn);
 	}
 };

@@ -5,6 +5,7 @@
 #include <errno.h>
 #include "socketwrapper.h"
 #include "error.h"
+#include "const.h"
 
 using namespace std;
 

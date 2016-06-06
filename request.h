@@ -3,6 +3,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <utility>
 
 using namespace std;
 
@@ -26,5 +27,8 @@ public:
 ostream& operator<<(ostream &os,const Request &r);
 
 
-string recvheaders(int conn);
-Request parseheaders(const string &s);
+//pair of received block and size of actual header block
+pair<string,int> recvheaders(int conn);
+
+//parses the prefix of s of length sz
+Request parseheaders(const string &s,int sz);

@@ -197,13 +197,13 @@ public:
 
 void handleaccept(Config config,Socketwrapper conn){
 	try {
-		string buf=recvheaders(conn);
-		Request r=parseheaders(buf);
+		pair<string,int> bufp=recvheaders(conn);
+		Request r=parseheaders(bufp.first,bufp.second);
 		bool success=false;
 		for(Target &t : config.targets){
 			if(t.match(r)){
 				cout<<"Forwarding to target "<<t.name<<endl;
-				t.forwardpipe(buf,move(conn));
+				t.forwardpipe(bufp.first,move(conn));
 				success=true;
 				break;
 			}

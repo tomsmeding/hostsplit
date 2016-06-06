@@ -39,7 +39,7 @@ ostream& operator<<(ostream &os,const Request &r){
 }
 
 
-string recvheaders(int conn){
+pair<string,int> recvheaders(int conn){
 	const int bufsz=1024;
 	char buf[bufsz];
 	string res;
@@ -72,7 +72,7 @@ string recvheaders(int conn){
 		if(state==4)break;
 		if(res.size()>=102400)throw Error("Too large header block");
 	}
-	return res;
+	return {res,cursor+1};
 }
 
 inline bool isws(char c){
@@ -82,68 +82,68 @@ inline bool islf(char c){
 	return c=='\r'||c=='\n';
 }
 
-void skipws(const string &s,int &cursor){
-	for(;cursor<(int)s.size();cursor++)if(!isws(s[cursor]))return;
+void skipws(const string &s,int sz,int &cursor){
+	for(;cursor<sz;cursor++)if(!isws(s[cursor]))return;
 	throw Error("No header parse: end of stream after skipws");
 }
-void skiptolf(const string &s,int &cursor){
-	for(;cursor<(int)s.size();cursor++)if(islf(s[cursor]))return;
+void skiptolf(const string &s,int sz,int &cursor){
+	for(;cursor<sz;cursor++)if(islf(s[cursor]))return;
 	throw Error("No header parse: end of stream after skiptolf");
 }
-void skipnowslf(const string &s,int &cursor){
-	for(;cursor<(int)s.size();cursor++)if(isws(s[cursor])||islf(s[cursor]))return;
+void skipnowslf(const string &s,int sz,int &cursor){
+	for(;cursor<sz;cursor++)if(isws(s[cursor])||islf(s[cursor]))return;
 	throw Error("No header parse: end of stream after skipnowslf");
 }
-void skipneqnolf(const string &s,int &cursor,char c){
-	for(;cursor<(int)s.size();cursor++)if(s[cursor]==c||islf(s[cursor]))break;
-	if(cursor==(int)s.size())throw Error("No header parse: end of stream after skipneqnolf");
+void skipneqnolf(const string &s,int sz,int &cursor,char c){
+	for(;cursor<sz;cursor++)if(s[cursor]==c||islf(s[cursor]))break;
+	if(cursor==sz)throw Error("No header parse: end of stream after skipneqnolf");
 	if(s[cursor]!=c)throw Error(string("No header parse: char not found in skipneqnolf: ")+c);
 }
-void skipwslf(const string &s,int &cursor,bool allowend=false){
-	for(;cursor<(int)s.size();cursor++)if(!isws(s[cursor]))break;
-	if(cursor==(int)s.size())throw Error("No header parse: end of stream during skipwslf");
+void skipwslf(const string &s,int sz,int &cursor,bool allowend=false){
+	for(;cursor<sz;cursor++)if(!isws(s[cursor]))break;
+	if(cursor==sz)throw Error("No header parse: end of stream during skipwslf");
 	if(islf(s[cursor])){
 		cursor++;
-		for(;cursor<(int)s.size();cursor++)if(!islf(s[cursor]))break;
-		if(!allowend&&cursor==(int)s.size())throw Error("No header parse: end of stream after skipwslf");
+		for(;cursor<sz;cursor++)if(!islf(s[cursor]))break;
+		if(!allowend&&cursor==sz)throw Error("No header parse: end of stream after skipwslf");
 	} else throw Error(string("No header parse: lf expected in skipwslf, got ")+s[cursor]);
 }
 
-Request parseheaders(const string &s){
+Request parseheaders(const string &s,int sz){
 	Request r;
 	int cursor=0,start=0;
-	skipnowslf(s,cursor);
+	skipnowslf(s,sz,cursor);
 	if(cursor==start)throw Error("No header parse: empty method field");
 	r.method=s.substr(0,cursor);
 
-	skipws(s,cursor);
+	skipws(s,sz,cursor);
 	start=cursor;
-	skipnowslf(s,cursor);
+	skipnowslf(s,sz,cursor);
 	if(cursor==start)throw Error("No header parse: empty path field");
 	r.path=s.substr(start,cursor-start);
 	
-	skipws(s,cursor);
+	skipws(s,sz,cursor);
 	start=cursor;
-	skipnowslf(s,cursor);
+	skipnowslf(s,sz,cursor);
 	if(cursor==start)throw Error("No header parse: empty version field");
 	r.version=s.substr(start,cursor-start);
-	skipwslf(s,cursor,true);
-	if(cursor==(int)s.size())return r; //no headers
+	skipwslf(s,sz,cursor,true);
+	if(cursor==sz)return r; //no headers
 
 	while(true){
 		start=cursor;
-		skipneqnolf(s,cursor,':');
+		skipneqnolf(s,sz,cursor,':');
 		if(cursor==start)throw Error("No header parse: empty header name");
 		string name=s.substr(start,cursor-start);
 		cursor++;
-		skipws(s,cursor);
+		skipws(s,sz,cursor);
 		start=cursor;
-		skiptolf(s,cursor);
+		skiptolf(s,sz,cursor);
 		if(cursor==start)throw Error("No header parse: empty header value");
 		string value=s.substr(start,cursor-start);
 		r.addheader(name,value);
-		skipwslf(s,cursor,true);
-		if(cursor==(int)s.size())break;
+		skipwslf(s,sz,cursor,true);
+		if(cursor==sz)break;
 	}
 	return r;
 }

@@ -5,9 +5,9 @@ else
 endif
 CXXFLAGS = -Wall -Wextra -std=c++11 -O2
 ifeq ($(shell uname),Linux)
-       LDFLAGS = -pthread
+	LDFLAGS = -pthread
 else
-       LDFLAGS =
+	LDFLAGS =
 endif
 
 BIN = main

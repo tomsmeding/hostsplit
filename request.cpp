@@ -46,32 +46,37 @@ pair<string,int> recvheaders(int conn){
 	string res;
 	int cursor=0;
 	int state=0; //0=searching, 1=r, 2=r?n, 3=r?nr, 4=r?nr?n
-	while(true){
-		int nrec=recv(conn,buf,bufsz-1,0);
-		if(nrec==-1)throw Error(string("recv: ")+strerror(errno));
-		if(nrec==0)throw Error("end of stream before double-lf");
-		buf[nrec]='\0';
-		res+=buf;
-		for(;cursor<(int)res.size();cursor++){
-			if(res[cursor]=='\r'){
-				switch(state){
-					case 0: state=1; break;
-					case 1: state=0; break;
-					case 2: state=3; break;
-					case 3: state=0; break;
-				}
-			} else if(res[cursor]=='\n'){
-				switch(state){
-					case 0: state=2; break;
-					case 1: state=2; break;
-					case 2: state=4; break;
-					case 3: state=4; break;
-				}
-			} else state=0;
+	try {
+		while(true){
+			int nrec=recv(conn,buf,bufsz-1,0);
+			if(nrec==-1)throw Error(string("recv: ")+strerror(errno));
+			if(nrec==0)throw Error("end of stream before double-lf");
+			buf[nrec]='\0';
+			res+=buf;
+			for(;cursor<(int)res.size();cursor++){
+				if(res[cursor]=='\r'){
+					switch(state){
+						case 0: state=1; break;
+						case 1: state=0; break;
+						case 2: state=3; break;
+						case 3: state=0; break;
+					}
+				} else if(res[cursor]=='\n'){
+					switch(state){
+						case 0: state=2; break;
+						case 1: state=2; break;
+						case 2: state=4; break;
+						case 3: state=4; break;
+					}
+				} else state=0;
+				if(state==4)break;
+			}
 			if(state==4)break;
+			if(res.size()>=102400)throw Error("Too large header block");
 		}
-		if(state==4)break;
-		if(res.size()>=102400)throw Error("Too large header block");
+	} catch(Error e){
+		cout<<"Error, received up until now:"<<endl<<"<<<"<<res<<">>>"<<endl;
+		throw e;
 	}
 #ifdef DEBUG
 	cout<<res<<endl;
@@ -116,38 +121,45 @@ void skipwslf(const string &s,int sz,int &cursor,bool allowend=false){
 Request parseheaders(const string &s,int sz){
 	Request r;
 	int cursor=0,start=0;
-	skipnowslf(s,sz,cursor);
-	if(cursor==start)throw Error("No header parse: empty method field");
-	r.method=s.substr(0,cursor);
+	try {
+		skipnowslf(s,sz,cursor);
+		if(cursor==start)throw Error("No header parse: empty method field");
+		r.method=s.substr(0,cursor);
 
-	skipws(s,sz,cursor);
-	start=cursor;
-	skipnowslf(s,sz,cursor);
-	if(cursor==start)throw Error("No header parse: empty path field");
-	r.path=s.substr(start,cursor-start);
-	
-	skipws(s,sz,cursor);
-	start=cursor;
-	skipnowslf(s,sz,cursor);
-	if(cursor==start)throw Error("No header parse: empty version field");
-	r.version=s.substr(start,cursor-start);
-	skipwslf(s,sz,cursor,true);
-	if(cursor==sz)return r; //no headers
-
-	while(true){
-		start=cursor;
-		skipneqnolf(s,sz,cursor,':');
-		if(cursor==start)throw Error("No header parse: empty header name");
-		string name=s.substr(start,cursor-start);
-		cursor++;
 		skipws(s,sz,cursor);
 		start=cursor;
-		skiptolf(s,sz,cursor);
-		if(cursor==start)throw Error("No header parse: empty header value");
-		string value=s.substr(start,cursor-start);
-		r.addheader(name,value);
+		skipnowslf(s,sz,cursor);
+		if(cursor==start)throw Error("No header parse: empty path field");
+		r.path=s.substr(start,cursor-start);
+
+		skipws(s,sz,cursor);
+		start=cursor;
+		skipnowslf(s,sz,cursor);
+		if(cursor==start)throw Error("No header parse: empty version field");
+		r.version=s.substr(start,cursor-start);
 		skipwslf(s,sz,cursor,true);
-		if(cursor==sz)break;
+		if(cursor==sz)return r; //no headers
+
+		while(true){
+			start=cursor;
+			skipneqnolf(s,sz,cursor,':');
+			if(cursor==start)throw Error("No header parse: empty header name");
+			string name=s.substr(start,cursor-start);
+			cursor++;
+			skipws(s,sz,cursor);
+			start=cursor;
+			skiptolf(s,sz,cursor);
+			if(cursor==start)throw Error("No header parse: empty header value");
+			string value=s.substr(start,cursor-start);
+			r.addheader(name,value);
+			skipwslf(s,sz,cursor,true);
+			if(cursor==sz)break;
+		}
+	} catch(Error e){
+		cout<<"Error, request up until now:"<<endl<<r<<endl
+		    <<"Source string:"<<endl<<"<<<"<<s.substr(0,sz)<<">>>"<<endl
+		    <<"cursor="<<cursor<<" start="<<start<<endl;
+		throw e;
 	}
 	return r;
 }

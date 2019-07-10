@@ -2,8 +2,8 @@
 
 This is a simple, bare-bones reverse proxy, written in C++. Don't use it for
 your military-grade servers, and maybe also don't use it for your small
-projects. Supposedly, it works, since I use it myself. At least, at the time
-this was written. Which might be some time ago, if I don't update this.
+projects. It has worked well enough for me at some point, but I since moved on
+to the more mature [nginx](https://nginx.org/).
 
 
 ## Config file
